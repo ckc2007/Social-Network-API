@@ -1,4 +1,4 @@
-const { Schema, Types } = require("mongoose");
+const { Schema, model } = require("mongoose");
 
 const reactionSchema = require("./Reaction");
 
@@ -12,13 +12,12 @@ const thoughtSchema = new Schema(
     },
     createdAt: {
       type: Date,
-      timestamp: true,
       default: Date.now,
     },
     username: {
       required: true,
       type: String,
-      ref: "User",
+      ref: "User", // Reference to the "User" model
     },
     reactions: [reactionSchema],
   },
@@ -27,6 +26,7 @@ const thoughtSchema = new Schema(
       virtuals: true,
       getters: true,
     },
+    //  Mongoose automatically assigns a timestamp to the createdAt field when you set timestamps: true.
     timestamps: true,
   }
 );
@@ -41,5 +41,3 @@ thoughtSchema.virtual("reactionCount").get(function () {
 const Thought = model("thought", thoughtSchema);
 
 module.exports = Thought;
-
-// refactor this
