@@ -1,38 +1,31 @@
-const { Schema, model } = require('mongoose');
+const { Schema, Types } = require("mongoose");
 
-const courseSchema = new Schema(
+const reactionSchema = new Schema(
   {
-    courseName: {
+    reactionId: {
+      type: Schema.Types.ObjectId,
+      default: () => new Types.ObjectId(),
+    },
+    reactionBody: {
+      type: String,
+      required: true,
+      maxLength: 400,
+    },
+    username: {
       type: String,
       required: true,
     },
-    inPerson: {
-      type: Boolean,
-      default: true,
-    },
-    startDate: {
+    createdAt: {
       type: Date,
-      default: Date.now(),
+      default: Date.now,
     },
-    endDate: {
-      type: Date,
-      default: () => new Date(+new Date() + 84 * 24 * 60 * 60 * 1000),
-    },
-    students: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Student',
-      },
-    ],
   },
   {
     toJSON: {
-      virtuals: true,
+      getters: true,
     },
-    id: false,
+    timestamps: true,
   }
 );
 
-const Course = model('course', courseSchema);
-
-module.exports = Course;
+module.exports = reactionSchema;
