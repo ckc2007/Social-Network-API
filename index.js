@@ -23,7 +23,7 @@
 // });
 
 const express = require("express");
-const connectDB = require("./config/db");
+const { connectDB } = require("./config/db.js");
 const routes = require("./routes");
 const path = require("path");
 

@@ -1,6 +1,5 @@
-const { Schema, model } = require("mongoose");
-
-const reactionSchema = require("./Reaction");
+const { Schema, model, Types } = require("mongoose");
+const Reaction = require("./Reaction");
 
 const thoughtSchema = new Schema(
   {
@@ -19,25 +18,26 @@ const thoughtSchema = new Schema(
       type: String,
       ref: "User", // Reference to the "User" model
     },
-    reactions: [reactionSchema],
+    reactions: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Reaction", // Reference to the "Reaction" model
+      },
+    ],
   },
   {
     toJSON: {
       virtuals: true,
       getters: true,
     },
-    //  Mongoose automatically assigns a timestamp to the createdAt field when you set timestamps: true.
     timestamps: true,
   }
 );
 
-// A virtual property is a property that is not stored directly in the database but is calculated or derived from other properties.
-// The .virtual() method is a Mongoose method used to define virtual properties for a schema
-// The virtual property is useful for situations where you need to calculate or derive a property value on the fly based on other data in the document without storing it redundantly in the database.
 thoughtSchema.virtual("reactionCount").get(function () {
   return this.reactions.length;
 });
 
-const Thought = model("thought", thoughtSchema);
+const Thought = model("Thought", thoughtSchema);
 
 module.exports = Thought;
