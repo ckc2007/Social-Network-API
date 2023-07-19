@@ -1,71 +1,135 @@
-const { Course, Student } = require('../models');
+const { User, Thought } = require("../models");
 
 module.exports = {
-  // Get all courses
-  async getCourses(req, res) {
+  async getThoughts(req, res) {
     try {
-      const courses = await Course.find();
-      res.json(courses);
+      const thoughts = await Thought.find();
+      res.json(thoughts);
     } catch (err) {
-      res.status(500).json(err);
+      console.error("Error fetching thoughts:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to fetch thoughts. Please try again later." });
     }
   },
-  // Get a course
-  async getSingleCourse(req, res) {
-    try {
-      const course = await Course.findOne({ _id: req.params.courseId })
-        .select('-__v');
 
-      if (!course) {
-        return res.status(404).json({ message: 'No course with that ID' });
+  async getSingleThought(req, res) {
+    try {
+      const thought = await Thought.findOne({ _id: req.params.thoughtId });
+      if (!thought) {
+        return res.status(404).json({ message: "Thought Not Found!" });
       }
-
-      res.json(course);
+      res.json(thought);
     } catch (err) {
-      res.status(500).json(err);
+      console.error("Error fetching thought:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to fetch thought. Please try again later." });
     }
   },
-  // Create a course
-  async createCourse(req, res) {
-    try {
-      const course = await Course.create(req.body);
-      res.json(course);
-    } catch (err) {
-      console.log(err);
-      return res.status(500).json(err);
-    }
-  },
-  // Delete a course
-  async deleteCourse(req, res) {
-    try {
-      const course = await Course.findOneAndDelete({ _id: req.params.courseId });
 
-      if (!course) {
-        return res.status(404).json({ message: 'No course with that ID' });
-      }
-
-      await Student.deleteMany({ _id: { $in: course.students } });
-      res.json({ message: 'Course and students deleted!' });
-    } catch (err) {
-      res.status(500).json(err);
-    }
-  },
-  // Update a course
-  async updateCourse(req, res) {
+  async createThought(req, res) {
     try {
-      const course = await Course.findOneAndUpdate(
-        { _id: req.params.courseId },
-        { $set: req.body },
-        { runValidators: true, new: true }
+      const thought = await Thought.create(req.body);
+      console.log(thought);
+
+      const updateUser = await User.findOneAndUpdate(
+        { username: req.body.username },
+        { $push: { thoughts: thought } }
       );
 
-      if (!course) {
-        return res.status(404).json({ message: 'No course with this id!' });
+      res.json(updateUser);
+    } catch (err) {
+      console.error("Error creating thought:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to create thought. Please try again later." });
+    }
+  },
+
+  async updateThought(req, res) {
+    try {
+      const newThought = await Thought.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        { $set: req.body },
+        { new: true }
+      );
+      if (!newThought) {
+        return res.status(404).json({ message: "Thought Not Found!" });
+      }
+      res.json(newThought);
+    } catch (err) {
+      console.error("Error updating thought:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to update thought. Please try again later." });
+    }
+  },
+
+  async deleteThought(req, res) {
+    try {
+      const thought = await Thought.findOneAndRemove({
+        _id: req.params.thoughtId,
+      });
+
+      if (!thought) {
+        return res.status(404).json({ message: "Thought Not Found!" });
       }
 
-      res.json(course);
+      res.json({ thought, message: "Thought Deleted!" });
     } catch (err) {
-      res.status(500).json(err);
+      console.error("Error deleting thought:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to delete thought. Please try again later." });
+    }
+  },
+
+  async createReaction(req, res) {
+    try {
+      const reaction = req.body;
+      console.log(req.body);
+      const newReaction = await Thought.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        { $addToSet: { reactions: reaction } },
+        { new: true }
+      );
+
+      if (!newReaction) {
+        return res.status(404).json({ message: "Thought Not Found!" });
+      }
+
+      res.json(newReaction);
+      console.log("reaction added");
+    } catch (err) {
+      console.error("Error creating reaction:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to create reaction. Please try again later." });
+    }
+  },
+
+  async deleteReaction(req, res) {
+    try {
+      const reaction = await Thought.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        { $pull: { reactions: { _id: req.params.reactionId } } },
+        { runValidators: true },
+        { new: true }
+      );
+
+      if (!reaction) {
+        return res
+          .status(404)
+          .json({ message: "Thought or Reaction Not Found!" });
+      }
+
+      res.json(reaction);
+    } catch (err) {
+      console.error("Error deleting reaction:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to delete reaction. Please try again later." });
     }
   },
 };
