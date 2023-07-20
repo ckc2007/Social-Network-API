@@ -95,9 +95,13 @@ module.exports = {
 
   async addFriend(req, res) {
     try {
+      // Get the friend's ObjectId from the request body
+      const { friendId } = req.body;
+
+      // Find the user by their ObjectId and add the friend's ObjectId to the 'friends' array
       const user = await User.findOneAndUpdate(
         { _id: req.params.userId },
-        { $addToSet: req.body },
+        { $addToSet: { friends: friendId } },
         { new: true }
       );
 
