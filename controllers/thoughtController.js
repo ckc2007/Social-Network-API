@@ -1,4 +1,4 @@
-const { User, Thought } = require("../models");
+const { User, Thought, Reaction } = require("../models");
 
 module.exports = {
   async getThoughts(req, res) {
@@ -85,17 +85,39 @@ module.exports = {
     }
   },
 
+  async getReactionsForThought(req, res) {
+    try {
+      const thoughtId = req.params.thoughtId;
+      const thought = await Thought.findById(thoughtId).populate("reactions");
+      if (!thought) {
+        return res.status(404).json({ message: "Thought Not Found!" });
+      }
+      res.json(thought.reactions);
+    } catch (err) {
+      console.error("Error fetching reactions:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to fetch reactions. Please try again later." });
+    }
+  },
+
   async createReaction(req, res) {
     try {
-      const reaction = req.body;
-      console.log(req.body);
-      const newReaction = await Thought.findOneAndUpdate(
+      const { reactionBody, username } = req.body; // Extract the required fields
+
+      const newReaction = await Reaction.create({
+        // Create a new Reaction object
+        reactionBody,
+        username,
+      });
+
+      const thought = await Thought.findOneAndUpdate(
         { _id: req.params.thoughtId },
-        { $addToSet: { reactions: reaction } },
+        { $addToSet: { reactions: newReaction._id } }, // Add the reaction's ObjectId to the reactions array
         { new: true }
       );
 
-      if (!newReaction) {
+      if (!thought) {
         return res.status(404).json({ message: "Thought Not Found!" });
       }
 
@@ -111,20 +133,19 @@ module.exports = {
 
   async deleteReaction(req, res) {
     try {
-      const reaction = await Thought.findOneAndUpdate(
-        { _id: req.params.thoughtId },
-        { $pull: { reactions: { _id: req.params.reactionId } } },
-        { runValidators: true },
-        { new: true }
+      const thought = await Thought.findByIdAndUpdate(
+        req.params.thoughtId,
+        { $pull: { reactions: req.params.reactionId } },
+        { runValidators: true, new: true }
       );
 
-      if (!reaction) {
+      if (!thought) {
         return res
           .status(404)
           .json({ message: "Thought or Reaction Not Found!" });
       }
 
-      res.json(reaction);
+      res.json(thought);
     } catch (err) {
       console.error("Error deleting reaction:", err);
       res
