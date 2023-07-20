@@ -78,6 +78,21 @@ module.exports = {
     }
   },
 
+  async getFriends(req, res) {
+    try {
+      const user = await User.findById(req.params.userId).select("friends");
+      if (!user) {
+        return res.status(404).json({ message: "User Not Found!" });
+      }
+      res.json(user.friends);
+    } catch (err) {
+      console.error("Error fetching friends:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to fetch friends. Please try again later." });
+    }
+  },
+
   async addFriend(req, res) {
     try {
       const user = await User.findOneAndUpdate(
@@ -103,7 +118,7 @@ module.exports = {
     try {
       const user = await User.findOneAndUpdate(
         { _id: req.params.userId },
-        { $pull: { friends: req.params.friendsId } },
+        { $pull: { friends: req.params.friendId } },
         { runValidators: true, new: true }
       );
 
